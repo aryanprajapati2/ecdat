@@ -121,23 +121,39 @@ def create_app(
     # 5. Serve minimal frontend shell
     @app.route("/", methods=["GET"])
     def serve_index() -> Any:
-        if static_root.exists() and (static_root / "index.html").exists():
-            return send_from_directory(str(static_root), "index.html")
-        return jsonify({"message": "ECDAT Demo API running. Frontend static root not found."})
+        import os
+        paths_to_try = [
+            static_root,
+            Path(os.getcwd()) / "demo" / "frontend",
+            Path(__file__).resolve().parent.parent / "frontend",
+        ]
+        for p in paths_to_try:
+            if p.exists() and (p / "index.html").exists():
+                return send_from_directory(str(p), "index.html")
+        return jsonify({"error": "File not found", "debug_tried_paths": [str(p) for p in paths_to_try]}), 404
 
     @app.route("/<path:filename>", methods=["GET"])
     def serve_static(filename: str) -> Any:
         if filename.startswith("api/"):
             return jsonify({"error": "Resource not found"}), 404
-        try:
-            resolved_target = (static_root / filename).resolve()
-            if not resolved_target.is_relative_to(static_root.resolve()):
-                return jsonify({"error": "Resource not found"}), 404
-            if resolved_target.is_file():
-                return send_from_directory(str(static_root), filename)
-        except Exception:
-            return jsonify({"error": "Resource not found"}), 404
-        return jsonify({"error": "File not found"}), 404
+            
+        import os
+        paths_to_try = [
+            static_root,
+            Path(os.getcwd()) / "demo" / "frontend",
+            Path(__file__).resolve().parent.parent / "frontend",
+        ]
+        
+        for p in paths_to_try:
+            if p.exists():
+                try:
+                    resolved_target = (p / filename).resolve()
+                    if resolved_target.is_relative_to(p.resolve()) and resolved_target.is_file():
+                        return send_from_directory(str(p), filename)
+                except Exception:
+                    pass
+                    
+        return jsonify({"error": "File not found", "debug_tried_paths": [str(p) for p in paths_to_try]}), 404
 
     # 6. Global error handlers (JSON-safe, no traceback disclosure)
     @app.errorhandler(404)
