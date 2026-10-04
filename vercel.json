@@ -3,25 +3,16 @@
   "builds": [
     {
       "src": "app.py",
-      "use": "@vercel/python"
-    },
-    {
-      "src": "demo/frontend/**",
-      "use": "@vercel/static"
+      "use": "@vercel/python",
+      "config": {
+        "includeFiles": "demo/frontend/**"
+      }
     }
   ],
   "routes": [
     {
-      "src": "/api/(.*)",
-      "dest": "app.py"
-    },
-    {
-      "src": "/",
-      "dest": "/demo/frontend/index.html"
-    },
-    {
       "src": "/(.*)",
-      "dest": "/demo/frontend/$1"
+      "dest": "app.py"
     }
   ]
 }
