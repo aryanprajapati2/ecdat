@@ -1,14 +1,27 @@
 {
   "version": 2,
-  "cleanUrls": true,
-  "rewrites": [
+  "builds": [
     {
-      "source": "/",
-      "destination": "/demo/frontend/index.html"
+      "src": "app.py",
+      "use": "@vercel/python"
     },
     {
-      "source": "/(.*)",
-      "destination": "/demo/frontend/$1"
+      "src": "demo/frontend/**",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "app.py"
+    },
+    {
+      "src": "/",
+      "dest": "/demo/frontend/index.html"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/demo/frontend/$1"
     }
   ]
 }
